@@ -3,8 +3,6 @@ name: Build RifatCamPro iOS
 on:
   push:
     branches: [main]
-    paths:
-      - 'RifatCamPro/**'
   workflow_dispatch:
 
 jobs:
@@ -17,24 +15,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.app || true
+      - name: Install XcodeGen
+        run: brew install xcodegen
 
-      - name: List available Xcode versions
-        run: ls /Applications/ | grep -i xcode || ls /Applications/
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Verify Project
+        run: |
+          ls -la RifatCamPro.xcodeproj/
+          echo "Project generated successfully"
 
       - name: Build Without Signing
         run: |
-          XCODE_APP=$(ls -d /Applications/Xcode*.app 2>/dev/null | head -1)
-          if [ -z "$XCODE_APP" ]; then
-            echo "ERROR: No Xcode found!"
-            exit 1
-          fi
-          sudo xcode-select -s "$XCODE_APP"
-          echo "Using: $XCODE_APP"
-          xcodebuild -version
-
-          xcodebuild -project RifatCamPro/RifatCamPro.xcodeproj \
+          xcodebuild -project RifatCamPro.xcodeproj \
             -scheme RifatCamPro \
             -configuration Release \
             -destination "generic/platform=iOS" \
@@ -43,32 +37,30 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" \
             ENABLE_BITCODE=NO \
-            build
+            build 2>&1 | tail -50
 
       - name: Package IPA
         run: |
           BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "RifatCamPro.app" -path "*/Release-iphoneos/*" 2>/dev/null | head -1)
           
           if [ -z "$BUILD_DIR" ]; then
-            echo "Searching for build products..."
             BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "RifatCamPro.app" 2>/dev/null | head -1)
           fi
           
-          if [ -z "$BUILD_DIR" ]; then
-            echo "WARNING: .app not found, creating placeholder"
-            mkdir -p ipa_output/Payload
-            touch ipa_output/Payload/RifatCamPro.app
-          else
+          mkdir -p ipa_output/Payload
+          
+          if [ -n "$BUILD_DIR" ]; then
             echo "Found: $BUILD_DIR"
-            mkdir -p ipa_output/Payload
             cp -R "$BUILD_DIR" ipa_output/Payload/
+          else
+            echo "No .app found, build may have failed"
+            exit 1
           fi
           
           cd ipa_output
           zip -r ../RifatCamPro.ipa Payload/
           cd ..
           mv RifatCamPro.ipa ipa_output/
-          echo "IPA created at ipa_output/RifatCamPro.ipa"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
