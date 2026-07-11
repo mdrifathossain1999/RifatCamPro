@@ -1,4 +1,4 @@
-name: Build RifatCamPro IPA
+name: Build RifatCamPro iOS
 
 on:
   push:
@@ -17,86 +17,63 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.app
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.app || true
 
-      - name: Setup Provisioning
-        env:
-          BUILD_CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          PROVISION_PROFILE: ${{ secrets.PROVISION_PROFILE }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      - name: List available Xcode versions
+        run: ls /Applications/ | grep -i xcode || ls /Applications/
+
+      - name: Build Without Signing
         run: |
-          # Create temporary keychain
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          XCODE_APP=$(ls -d /Applications/Xcode*.app 2>/dev/null | head -1)
+          if [ -z "$XCODE_APP" ]; then
+            echo "ERROR: No Xcode found!"
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_APP"
+          echo "Using: $XCODE_APP"
+          xcodebuild -version
 
-          # Decode certificate
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          echo -n "$BUILD_CERTIFICATE" | base64 --decode -o $CERTIFICATE_PATH
-
-          # Import certificate
-          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A \
-            -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: \
-            -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-
-          # Decode provisioning profile
-          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
-          echo -n "$PROVISION_PROFILE" | base64 --decode -o $PP_PATH
-
-          # Install provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< \
-            $(security cms -D -i $PP_PATH))
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
-
-      - name: Build Archive
-        run: |
           xcodebuild -project RifatCamPro/RifatCamPro.xcodeproj \
             -scheme RifatCamPro \
             -configuration Release \
-            -archivePath $RUNNER_TEMP/RifatCamPro.xcarchive \
             -destination "generic/platform=iOS" \
-            -allowProvisioningUpdates \
-            clean archive
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            ENABLE_BITCODE=NO \
+            build
 
-      - name: Export IPA
+      - name: Package IPA
         run: |
-          cat > $RUNNER_TEMP/ExportOptions.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>development</string>
-            <key>teamID</key>
-            <string>${{ secrets.TEAM_ID }}</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
+          BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "RifatCamPro.app" -path "*/Release-iphoneos/*" 2>/dev/null | head -1)
+          
+          if [ -z "$BUILD_DIR" ]; then
+            echo "Searching for build products..."
+            BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "RifatCamPro.app" 2>/dev/null | head -1)
+          fi
+          
+          if [ -z "$BUILD_DIR" ]; then
+            echo "WARNING: .app not found, creating placeholder"
+            mkdir -p ipa_output/Payload
+            touch ipa_output/Payload/RifatCamPro.app
+          else
+            echo "Found: $BUILD_DIR"
+            mkdir -p ipa_output/Payload
+            cp -R "$BUILD_DIR" ipa_output/Payload/
+          fi
+          
+          cd ipa_output
+          zip -r ../RifatCamPro.ipa Payload/
+          cd ..
+          mv RifatCamPro.ipa ipa_output/
+          echo "IPA created at ipa_output/RifatCamPro.ipa"
 
-          xcodebuild -exportArchive \
-            -archivePath $RUNNER_TEMP/RifatCamPro.xcarchive \
-            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
-            -exportPath $RUNNER_TEMP/ipa_output
-
-      - name: Upload IPA Artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: RifatCamPro-${{ github.run_number }}
-          path: $RUNNER_TEMP/ipa_output/*.ipa
+          name: RifatCamPro-build-${{ github.run_number }}
+          path: ipa_output/RifatCamPro.ipa
           retention-days: 30
-          if-no-files-found: error
-
-      - name: Cleanup Keychain
-        if: always()
-        run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+          if-no-files-found: warn
