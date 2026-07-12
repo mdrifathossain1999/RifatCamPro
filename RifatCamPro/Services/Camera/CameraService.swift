@@ -375,16 +375,7 @@ final class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputS
         do {
             try device.lockForConfiguration()
             defer { device.unlockForConfiguration() }
-            let tint = FocusManager.temperatureToTint(temperature)
-            let values = AVCaptureDevice.WhiteBalanceTemperatureAndTintValues(
-                temperature: Float(temperature),
-                tint: Float(tint)
-            )
-            let gains = device.whiteBalanceGains(for: values)
-            device.setWhiteBalanceModeLocked(
-                with: gains,
-                completionHandler: nil
-            )
+            device.whiteBalanceMode = .locked
             currentConfiguration.whiteBalanceTemperature = temperature
         } catch {
             errorSubject.send(.configurationFailed("White balance: \(error.localizedDescription)"))

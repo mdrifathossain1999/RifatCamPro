@@ -198,14 +198,8 @@ final class FocusManager {
         try device.lockForConfiguration()
         defer { device.unlockForConfiguration() }
 
-        let tint = Self.temperatureToTint(temperature)
-        let values = AVCaptureDevice.WhiteBalanceTemperatureAndTintValues(
-            temperature: Float(temperature),
-            tint: Float(tint)
-        )
-
         if device.isWhiteBalanceModeSupported(.locked) {
-            device.setWhiteBalanceModeLocked(with: device.whiteBalanceGains, completionHandler: nil)
+            device.whiteBalanceMode = .locked
             currentWhiteBalanceMode = .locked
         }
 

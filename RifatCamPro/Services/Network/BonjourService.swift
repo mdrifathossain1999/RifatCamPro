@@ -205,7 +205,7 @@ final class BonjourService: ObservableObject {
     private func handleDeviceAdded(_ result: NWBrowser.Result) {
         let endpoint = result.endpoint
         var metadata: Data? = nil
-        if case .bonjour(let data) = result.metadata { metadata = data }
+        if let record = result.metadata { metadata = record.rawRepresentation }
         let device = DiscoveredDevice(endpoint: endpoint, metadata: metadata)
 
         lock.lock()
@@ -241,7 +241,7 @@ final class BonjourService: ObservableObject {
     private func handleDeviceUpdated(_ result: NWBrowser.Result) {
         let endpoint = result.endpoint
         var metadata: Data? = nil
-        if case .bonjour(let data) = result.metadata { metadata = data }
+        if let record = result.metadata { metadata = record.rawRepresentation }
         let device = DiscoveredDevice(endpoint: endpoint, metadata: metadata)
 
         lock.lock()
@@ -268,7 +268,7 @@ final class BonjourService: ObservableObject {
             } else if let ipv6 = IPv6Address(device.host) {
                 endpoint = .hostPort(host: .ipv6(ipv6), port: NWEndpoint.Port(rawValue: device.port)!)
             } else {
-                endpoint = .hostPort(host: .name(device.host, NWInterface("")), port: NWEndpoint.Port(rawValue: device.port)!)
+                endpoint = .hostPort(host: .name(device.host, nil), port: NWEndpoint.Port(rawValue: device.port)!)
             }
         } else {
             endpoint = .service(name: device.name, type: serviceType, domain: domain, interface: nil)
