@@ -5,7 +5,7 @@ import CryptoKit
 
 // MARK: - WebSocket Opcodes
 
-private enum WebSocketOpcode: UInt8 {
+fileprivate enum WebSocketOpcode: UInt8 {
     case continuation = 0x0
     case text = 0x1
     case binary = 0x2
@@ -16,7 +16,7 @@ private enum WebSocketOpcode: UInt8 {
 
 // MARK: - WebSocket Frame
 
-private struct WebSocketFrame {
+fileprivate struct WebSocketFrame {
     var fin: Bool
     var opcode: WebSocketOpcode
     var masked: Bool

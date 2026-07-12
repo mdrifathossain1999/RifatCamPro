@@ -53,8 +53,8 @@ final class ConnectionManager: ObservableObject {
     private var browser: NWBrowser?
     private var listener: NWListener?
     private var connectionQueue = DispatchQueue(label: "com.rifatcam.connection", qos: .userInitiated)
-    private var reconnectTimer: DispatchSource?
-    private var uptimeTimer: DispatchSource?
+    private var reconnectTimer: DispatchSourceTimer?
+    private var uptimeTimer: DispatchSourceTimer?
     private var connectionStartTime: Date?
     private var currentTarget: ConnectionTarget?
     private var pendingPassword: String?
@@ -92,7 +92,7 @@ final class ConnectionManager: ObservableObject {
     // MARK: - Connection Lifecycle
 
     func connect(to target: ConnectionTarget) {
-        guard state == .disconnected || state == .failed else {
+        guard state == .disconnected || state.isFailed else {
             return
         }
 
@@ -134,7 +134,7 @@ final class ConnectionManager: ObservableObject {
     }
 
     func connectToServer(_ server: DiscoveredServer) {
-        let address = server.address ?? server.endpoint
+        let address = server.address ?? "\(server.endpoint)"
         let port = server.port
 
         let parameters = NWParameters.tcp
@@ -196,7 +196,7 @@ final class ConnectionManager: ObservableObject {
         switch result {
         case .success(let token):
             pairedToken = token
-            transition(to: .connected)
+            transition(to: .connected(address: networkStats.localIP))
             didConnect.send(networkStats.localIP)
             if autoReconnect {
                 startUptimeTimer()
@@ -210,7 +210,7 @@ final class ConnectionManager: ObservableObject {
     // MARK: - Streaming Control
 
     func startStreaming() {
-        guard state == .connected else { return }
+        guard state.isConnected else { return }
 
         willStartStreaming.send()
         streamSessionID = UUID()
@@ -253,7 +253,7 @@ final class ConnectionManager: ObservableObject {
             cameraService.stopSession()
         }
 
-        transition(to: .connected)
+        transition(to: .connected(address: networkStats.localIP))
         didStopStreaming.send()
     }
 
@@ -274,7 +274,7 @@ final class ConnectionManager: ObservableObject {
 
         if state == .streaming {
             resumeStreaming()
-        } else if state == .connected && autoReconnect {
+        } else if state.isConnected && autoReconnect {
             startUptimeTimer()
         }
     }
@@ -286,11 +286,11 @@ final class ConnectionManager: ObservableObject {
             cameraService.stopSession()
         }
 
-        transition(to: .connected)
+        transition(to: .connected(address: networkStats.localIP))
     }
 
     func resumeStreaming() {
-        guard state == .connected, currentTarget != nil else { return }
+        guard state.isConnected, currentTarget != nil else { return }
 
         Task { @MainActor in
             do {
@@ -364,7 +364,7 @@ final class ConnectionManager: ObservableObject {
 
     func handleAutoReconnect() {
         guard autoReconnect,
-              state == .failed || state == .disconnected,
+              state.isFailed || state == .disconnected,
               reconnectAttempts < maxReconnectAttempts,
               let target = currentTarget else {
             return
@@ -498,7 +498,7 @@ final class ConnectionManager: ObservableObject {
         let conn = connection
         connectionLock.unlock()
 
-        guard let conn, state == .connected || state == .streaming else { return }
+        guard let conn, state.isConnected || state.isStreaming else { return }
 
         conn.send(content: data, completion: .contentProcessed { [weak self] error in
             if let error {
@@ -750,6 +750,11 @@ enum ConnectionState: Equatable, Sendable {
         case .streaming: return "play.circle.fill"
         case .failed: return "exclamationmark.triangle.fill"
         }
+    }
+
+    var isFailed: Bool {
+        if case .failed = self { return true }
+        return false
     }
 
     var isConnected: Bool {

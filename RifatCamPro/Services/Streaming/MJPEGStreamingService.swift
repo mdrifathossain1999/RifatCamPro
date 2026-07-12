@@ -90,7 +90,7 @@ final class MJPEGStreamingService {
                         self.isRunning = false
                         self.lastError = .failedToStartServer(error)
                     }
-                    self?.stop()
+                    self.stop()
                 case .cancelled:
                     Task { @MainActor in
                         self.isRunning = false
@@ -262,7 +262,7 @@ final class MJPEGStreamingService {
                     clientsLock.unlock()
                 }
                 
-                let authed = clientsLock.withLock { clients.first { $0.id == clientId }?.isAuthenticated ?? false }
+                let authed = clientsLock.withLock { self.clients.first { $0.id == clientId }?.isAuthenticated ?? false }
                 guard authed else {
                     let response = "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"RifatCam Pro\"\r\nContent-Length: 0\r\n\r\n"
                     if let respData = response.data(using: .utf8) {

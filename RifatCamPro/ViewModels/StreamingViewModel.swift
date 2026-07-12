@@ -128,8 +128,6 @@ final class StreamingViewModel {
     }
 
     deinit {
-        durationTimer?.invalidate()
-        statsTimer?.invalidate()
     }
 
     // MARK: - Start Streaming

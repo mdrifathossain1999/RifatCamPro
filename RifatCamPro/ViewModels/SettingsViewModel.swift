@@ -341,7 +341,7 @@ final class SettingsViewModel {
     }
 
     func applyMaxConnections(_ max: Int) {
-        let clamped = max(1, min(max, 10))
+        let clamped = Swift.max(1, Swift.min(max, 10))
         maxConnections = clamped
         var config = settingsManager.currentSettings
         config.network.maxConnections = clamped

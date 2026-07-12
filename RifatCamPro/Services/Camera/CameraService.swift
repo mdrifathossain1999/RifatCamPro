@@ -376,11 +376,13 @@ final class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputS
             try device.lockForConfiguration()
             defer { device.unlockForConfiguration() }
             let tint = FocusManager.temperatureToTint(temperature)
+            let values = AVCaptureDevice.WhiteBalanceTemperatureAndTintValues(
+                temperature: Float(temperature),
+                tint: Float(tint)
+            )
+            let gains = device.whiteBalanceGains(for: values)
             device.setWhiteBalanceModeLocked(
-                with: AVCaptureDevice.WhiteBalanceTemperatureAndTintValues(
-                    temperature: Float(temperature),
-                    tint: Float(tint)
-                ),
+                with: gains,
                 completionHandler: nil
             )
             currentConfiguration.whiteBalanceTemperature = temperature
@@ -437,7 +439,7 @@ final class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputS
         }
         session.addOutput(photoOutput)
 
-        let settings = AVCapturePhotoSettings()
+        var settings = AVCapturePhotoSettings()
         settings.flashMode = currentConfiguration.enableTorch ? .on : .off
         if let format = settings.availablePreviewPhotoPixelFormatTypes.first {
             settings = AVCapturePhotoSettings(format: [kCVPixelBufferPixelFormatTypeKey as String: format])
@@ -448,8 +450,8 @@ final class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputS
             DispatchQueue.main.async {
                 completion(image)
             }
-            if let session = self?.captureSession {
-                sessionQueue.async {
+            if let session = self?.captureSession, let queue = self?.sessionQueue {
+                queue.async {
                     session.removeOutput(photoOutput)
                 }
             }

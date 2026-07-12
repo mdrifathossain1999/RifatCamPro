@@ -205,7 +205,8 @@ final class FocusManager {
         )
 
         if device.isWhiteBalanceModeSupported(.locked) {
-            device.setWhiteBalanceModeLocked(with: values, completionHandler: nil)
+            let gains = device.whiteBalanceGains(for: values)
+            device.setWhiteBalanceModeLocked(with: gains, completionHandler: nil)
             currentWhiteBalanceMode = .locked
         }
 

@@ -13,7 +13,7 @@ final class VideoEncoder: ObservableObject {
     private var frameCount: Int64 = 0
     private var lastEncodeTime: CFAbsoluteTime = 0
     private var consecutiveDrops: Int = 0
-    private var bitrateAdjustTimer: DispatchSource?
+    private var bitrateAdjustTimer: DispatchSourceTimer?
     private var bitrateHistory: [BitrateSample] = []
     private var sessionWidth: Int = 1920
     private var sessionHeight: Int = 1080
@@ -48,12 +48,10 @@ final class VideoEncoder: ObservableObject {
         let encoderSpecification: [String: Any]
         if codec == .hevc {
             encoderSpecification = [
-                kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder as String: true,
                 kVTVideoEncoderSpecification_EncoderID as String: "com.apple.videotoolbox.videoencoder.hevc"
             ]
         } else {
             encoderSpecification = [
-                kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder as String: true,
                 kVTVideoEncoderSpecification_EncoderID as String: "com.apple.videotoolbox.videoencoder.h264"
             ]
         }
@@ -79,7 +77,7 @@ final class VideoEncoder: ObservableObject {
         self.compressionSession = session
 
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_RealTime, value: kCFBooleanTrue)
-        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel, value: profileLevel(for: codec))
+        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel, value: profileLevel(for: codec) as CFString)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AverageBitRate, value: NSNumber(value: bitrate))
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_MaxKeyFrameInterval, value: NSNumber(value: frameRate * 2))
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration, value: NSNumber(value: 2))

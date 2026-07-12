@@ -342,13 +342,13 @@ final class NetworkService: Sendable {
     private func setupListener() {
         let params: NWParameters
         if useTLS {
-            let tcpParams = NWParameters.tcp
+            let tcpOptions = NWProtocolTCP.Options()
             let tlsOptions = NWProtocolTLS.Options()
             sec_protocol_options_set_min_tls_protocol_version(
                 tlsOptions.securityProtocolOptions,
                 .TLSv12
             )
-            params = NWParameters(tls: tlsOptions, tcp: tcpParams)
+            params = NWParameters(tls: tlsOptions, tcp: tcpOptions)
         } else {
             params = NWParameters.tcp
         }

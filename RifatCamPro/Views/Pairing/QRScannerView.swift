@@ -187,7 +187,7 @@ final class QRScannerViewController: UIViewController, AVCaptureMetadataOutputOb
             _ = convertedRect
         }
 
-        onCodeScanned(stringValue)
+        onCodeScanned?(stringValue)
     }
 
     // MARK: - UI Setup

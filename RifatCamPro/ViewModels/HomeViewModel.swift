@@ -108,7 +108,6 @@ final class HomeViewModel {
     }
 
     deinit {
-        durationTimer?.invalidate()
     }
 
     // MARK: - Initialization
@@ -413,7 +412,7 @@ final class HomeViewModel {
                 case .waiting:
                     self.connectionStatus = .connecting
                 case .failed(let error):
-                    self.connectionStatus = .error(error.localizedDescription)
+                    self.connectionStatus = .error(error)
                 }
             }
             .store(in: &cancellables)

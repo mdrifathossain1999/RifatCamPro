@@ -72,7 +72,7 @@ struct RifatCamProApp: App {
     var body: some Scene {
         WindowGroup {
             HomeView()
-                .environmentObject(homeViewModel)
+                .environment(homeViewModel)
                 .environmentObject(cameraService)
                 .environment(networkService)
                 .environmentObject(streamManager)

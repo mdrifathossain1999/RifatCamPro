@@ -90,7 +90,6 @@ final class PairingViewModel {
     }
 
     deinit {
-        stopScanning()
         bonjourService.stop()
     }
 

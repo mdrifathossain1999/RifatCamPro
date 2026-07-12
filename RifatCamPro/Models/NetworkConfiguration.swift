@@ -73,7 +73,6 @@ struct NetworkStats: Codable, Sendable {
     var fps: Double = 0
     var bytesSent: UInt64 = 0
     var bytesReceived: UInt64 = 0
-    var connectionStatus: ConnectionStatus = .disconnected
     var uptime: TimeInterval = 0
     
     var formattedBitrate: String {

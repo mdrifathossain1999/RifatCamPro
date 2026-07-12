@@ -86,7 +86,7 @@ final class H264StreamingService {
                         self.isRunning = false
                         self.lastError = .failedToStartServer(error)
                     }
-                    self?.stop()
+                    self.stop()
                 case .cancelled:
                     Task { @MainActor in
                         self.isRunning = false

@@ -395,9 +395,15 @@ final class SecurityService {
             return false
         }
 
-        let timeDiff = abs(Date().timeIntervalSince1970 - (try? JSONSerialization.jsonObject(
-            with: pairing.raw.data(using: .utf8) ?? Data()
-        ).flatMap { $0 as? [String: Any] }?["timestamp"] as? TimeInterval ?? 0))
+        let timestamp: TimeInterval = {
+            guard let data = pairing.raw.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let ts = json["timestamp"] as? TimeInterval else {
+                return 0
+            }
+            return ts
+        }()
+        let timeDiff = abs(Date().timeIntervalSince1970 - timestamp)
 
         return timeDiff < 300
     }
