@@ -5,7 +5,7 @@ import os
 
 // MARK: - Network Stats
 
-struct NetworkStats: Sendable {
+struct NetworkServiceStats: Sendable {
     var bytesSent: UInt64 = 0
     var bytesReceived: UInt64 = 0
     var uploadSpeed: Double = 0
@@ -20,7 +20,7 @@ struct NetworkStats: Sendable {
 
 // MARK: - Connection State
 
-enum ConnectionState: Sendable {
+enum NetworkServiceState: Sendable {
     case disconnected
     case listening
     case connecting
@@ -46,7 +46,7 @@ enum ConnectionState: Sendable {
         }
     }
 
-    static func fromNWListenerState(_ state: NWListener.State) -> ConnectionState {
+    static func fromNWListenerState(_ state: NWListener.State) -> NetworkServiceState {
         switch state {
         case .ready: return .listening
         case .failed(let error): return .failed(error.localizedDescription)
@@ -56,7 +56,7 @@ enum ConnectionState: Sendable {
         }
     }
 
-    static func fromNWConnectionState(_ state: NWConnection.State) -> ConnectionState {
+    static func fromNWConnectionState(_ state: NWConnection.State) -> NetworkServiceState {
         switch state {
         case .ready: return .connected
         case .failed(let error): return .failed(error.localizedDescription)
@@ -96,14 +96,14 @@ final class NetworkService: Sendable {
 
     // MARK: - Published State
 
-    private(set) var connectionState: ConnectionState = .disconnected
-    private(set) var stats = NetworkStats()
+    private(set) var connectionState: NetworkServiceState = .disconnected
+    private(set) var stats = NetworkServiceStats()
     private(set) var connectedClientAddress: String?
     private(set) var localIPAddress: String?
 
     // MARK: - Combine Subjects
 
-    let connectionStateChange = PassthroughSubject<ConnectionState, Never>()
+    let connectionStateChange = PassthroughSubject<NetworkServiceState, Never>()
     let dataReceived = PassthroughSubject<(Data, NWConnection), Never>()
     let errorSubject = PassthroughSubject<Error, Never>()
 
@@ -393,7 +393,7 @@ final class NetworkService: Sendable {
     // MARK: - Listener State
 
     private func handleListenerState(_ state: NWListener.State) {
-        let newState = ConnectionState.fromNWListenerState(state)
+        let newState = NetworkServiceState.fromNWListenerState(state)
 
         lock.lock()
         connectionState = newState
@@ -581,7 +581,7 @@ final class NetworkService: Sendable {
         lock.unlock()
 
         if remainingCount == 0 {
-            let newState: ConnectionState
+            let newState: NetworkServiceState
             if let error = error {
                 newState = .failed(error.localizedDescription)
             } else {
@@ -747,7 +747,7 @@ final class NetworkService: Sendable {
         let dlSpeed = speedMonitor.currentDownloadSpeed
         let ulSpeed = speedMonitor.currentUploadSpeed
 
-        var newStats = NetworkStats()
+        var newStats = NetworkServiceStats()
         newStats.bytesSent = rawSent
         newStats.bytesReceived = rawReceived
         newStats.uploadSpeed = ulSpeed

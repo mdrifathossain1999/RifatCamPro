@@ -9,6 +9,7 @@ enum HTTPMethod: String, Sendable {
     case DELETE
     case PATCH
     case HEAD
+    case OPTIONS
 }
 
 // MARK: - HTTP Status Code
@@ -157,6 +158,10 @@ final class HTTPRouter: @unchecked Sendable {
 
     func delete(_ path: String, handler: @escaping RouteHandler) {
         register(method: .DELETE, path: path, handler: handler)
+    }
+
+    func options(_ path: String, handler: @escaping RouteHandler) {
+        register(method: .OPTIONS, path: path, handler: handler)
     }
 
     func route(_ request: HTTPRequest) async -> HTTPResponse {

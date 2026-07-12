@@ -4,21 +4,14 @@ import Combine
 import Network
 import Observation
 
-enum StreamingProtocol: String, CaseIterable, Sendable {
-    case mjpeg
-    case h264
-    case hevc
-    case rtsp
-}
-
-enum StreamingState: Equatable, Sendable {
+enum StreamManagerState: Equatable, Sendable {
     case idle
     case preparing
     case streaming
     case paused
     case error(String)
     
-    static func == (lhs: StreamingState, rhs: StreamingState) -> Bool {
+    static func == (lhs: StreamManagerState, rhs: StreamManagerState) -> Bool {
         switch (lhs, rhs) {
         case (.idle, .idle), (.preparing, .preparing), (.streaming, .streaming), (.paused, .paused):
             return true
@@ -91,7 +84,7 @@ struct StreamingStatistics: Sendable {
 
 @Observable
 final class StreamManager {
-    private(set) var state: StreamingState = .idle
+    private(set) var state: StreamManagerState = .idle
     private(set) var statistics = StreamingStatistics()
     private(set) var activeProtocol: StreamingProtocol = .mjpeg
     private(set) var connectedClientCount: Int = 0
@@ -156,6 +149,8 @@ final class StreamManager {
             case .rtsp:
                 let svc = RTSPService(port: port)
                 try svc.start()
+            default:
+                throw StreamManagerError.protocolNotSupported(streamingProtocol)
             }
             
             setupBackgroundStreaming()
@@ -180,6 +175,8 @@ final class StreamManager {
             h264Service.stop()
         case .rtsp:
             rtspService.stop()
+        default:
+            break
         }
         
         endBackgroundStreaming()
@@ -230,6 +227,8 @@ final class StreamManager {
             
         case .h264, .hevc, .rtsp:
             break
+        default:
+            break
         }
     }
     
@@ -251,6 +250,8 @@ final class StreamManager {
             
         case .mjpeg:
             break
+        default:
+            break
         }
     }
     
@@ -264,6 +265,8 @@ final class StreamManager {
         case .rtsp:
             rtspService.pushSPS(data)
         case .mjpeg:
+            break
+        default:
             break
         }
     }
@@ -279,6 +282,8 @@ final class StreamManager {
             rtspService.pushPPS(data)
         case .mjpeg:
             break
+        default:
+            break
         }
     }
     
@@ -292,6 +297,8 @@ final class StreamManager {
         case .rtsp:
             rtspService.pushVPS(data)
         case .mjpeg:
+            break
+        default:
             break
         }
     }
@@ -409,6 +416,8 @@ final class StreamManager {
             connectedClientCount = h264Service.connectedClientCount
         case .rtsp:
             connectedClientCount = rtspService.connectedClientCount
+        default:
+            break
         }
     }
     

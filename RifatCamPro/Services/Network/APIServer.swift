@@ -21,18 +21,6 @@ struct APIConfiguration: Sendable {
     )
 }
 
-// MARK: - Device Info
-
-struct DeviceInfo: Codable, Sendable {
-    let name: String
-    let model: String
-    let systemVersion: String
-    let deviceId: String
-    let batteryLevel: Double
-    let batteryState: String
-    let isCharging: Bool
-}
-
 // MARK: - Streaming Stats
 
 struct StreamingStats: Codable, Sendable {
@@ -337,51 +325,51 @@ final class APIServer {
 
     private func registerRoutes() {
         router.get("/api/health") { [weak self] _ in
-            await self?.handleHealth()
+            await self?.handleHealth() ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.get("/api/status") { [weak self] _ in
-            await self?.handleStatus()
+            await self?.handleStatus() ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.get("/api/streaming") { [weak self] _ in
-            await self?.handleStreamingStats()
+            await self?.handleStreamingStats() ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.post("/api/camera/switch") { [weak self] request in
-            await self?.handleCameraSwitch(request)
+            await self?.handleCameraSwitch(request) ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.post("/api/camera/torch") { [weak self] request in
-            await self?.handleTorchToggle(request)
+            await self?.handleTorchToggle(request) ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.post("/api/camera/zoom") { [weak self] request in
-            await self?.handleZoom(request)
+            await self?.handleZoom(request) ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.post("/api/streaming/start") { [weak self] request in
-            await self?.handleStreamingStart(request)
+            await self?.handleStreamingStart(request) ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.post("/api/streaming/stop") { [weak self] _ in
-            await self?.handleStreamingStop()
+            await self?.handleStreamingStop() ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.get("/api/settings") { [weak self] _ in
-            await self?.handleGetSettings()
+            await self?.handleGetSettings() ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.post("/api/settings") { [weak self] request in
-            await self?.handleUpdateSettings(request)
+            await self?.handleUpdateSettings(request) ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.get("/api/devices") { [weak self] _ in
-            await self?.handleDevices()
+            await self?.handleDevices() ?? HTTPResponse(error: "Server unavailable", statusCode: .serviceUnavailable)
         }
 
         router.options("/api/*") { [weak self] _ in
-            self?.handleCORS()
+            self?.handleCORS() ?? HTTPResponse(statusCode: .noContent)
         }
     }
 
