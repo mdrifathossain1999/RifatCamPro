@@ -134,7 +134,7 @@ enum QRCodeGenerator {
             height: extent.height * scale * UIScreen.main.scale
         )
 
-        ctx.draw(ciImage, from: drawRect)
+        ctx.draw(ciImage, in: drawRect, from: ciImage.extent)
 
         guard let cgImage = context.makeImage() else {
             logger.error("Failed to create CGImage from context")

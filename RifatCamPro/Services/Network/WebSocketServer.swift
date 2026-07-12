@@ -320,7 +320,7 @@ final class WebSocketServer {
 
     // MARK: - Frame Encoding
 
-    func encodeFrame(opcode: WebSocketOpcode, payload: Data, mask: Bool = false) -> Data {
+    fileprivate func encodeFrame(opcode: WebSocketOpcode, payload: Data, mask: Bool = false) -> Data {
         var frame = Data()
 
         let firstByte: UInt8 = 0x80 | opcode.rawValue
@@ -358,7 +358,7 @@ final class WebSocketServer {
         return frame
     }
 
-    func encodeCloseFrame(code: UInt16?, reason: String = "") -> Data {
+    fileprivate func encodeCloseFrame(code: UInt16?, reason: String = "") -> Data {
         var payload = Data()
         if let code {
             var bigCode = code.bigEndian
