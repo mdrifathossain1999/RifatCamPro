@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import Combine
+import CryptoKit
 
 // MARK: - WebSocket Opcodes
 
@@ -312,7 +313,7 @@ final class WebSocketServer {
 
     private func sendHTTPReject(to client: WebSocketClient) {
         let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n"
-        client.connection.send(content: response.data(using: .utf8), completion: .contentProcessed { [weak self] _, _ in
+        client.connection.send(content: response.data(using: .utf8), completion: .contentProcessed { [weak self] _ in
             self?.removeClient(client)
         })
     }
@@ -467,13 +468,12 @@ final class WebSocketServer {
 
     private func processBuffer(for client: WebSocketClient) {
         while true {
-            let frameData: Data
-            bufferLock.withLock {
-                guard let buffer = receiveBuffers[client.id], buffer.count >= 2 else { return }
-                frameData = buffer
+            let frameData: Data? = bufferLock.withLock {
+                guard let buffer = receiveBuffers[client.id], buffer.count >= 2 else { return nil }
+                return buffer
             }
 
-            guard let frame = decodeFrame(from: frameData) else {
+            guard let frameData, let frame = decodeFrame(from: frameData) else {
                 break
             }
 

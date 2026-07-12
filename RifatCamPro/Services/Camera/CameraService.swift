@@ -414,7 +414,7 @@ final class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputS
             defer { device.unlockForConfiguration() }
             if device.activeFormat.isVideoHDRSupported {
                 device.automaticallyAdjustsVideoHDREnabled = !enabled
-                device.videoHDREnabled = enabled
+                device.isVideoHDREnabled = enabled
             }
             currentConfiguration.enableHDR = enabled
         } catch {
@@ -526,7 +526,7 @@ final class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputS
 
                     if device.activeFormat.isVideoHDRSupported {
                         device.automaticallyAdjustsVideoHDREnabled = !config.enableHDR
-                        device.videoHDREnabled = config.enableHDR
+                        device.isVideoHDREnabled = config.enableHDR
                     }
 
                     continuation.resume()

@@ -96,9 +96,9 @@ final class QRScannerViewController: UIViewController, AVCaptureMetadataOutputOb
             height: scanSize
         )
         scanningCornerView.frame = scanRect
-        previewLayer?.metadataOutputRectOfInterest(for: scanRect)
-
-        let outputRect = previewLayer?.metadataOutputRectConverted(fromLayerRect: scanRect) ?? .zero
+        if let metadataOutput = captureSession?.outputs.first(where: { $0 is AVCaptureMetadataOutput }) as? AVCaptureMetadataOutput {
+            metadataOutput.rectOfInterest = previewLayer?.metadataOutputRectConverted(fromLayerRect: scanRect) ?? .zero
+        }
         if let connection = captureSession?.outputs.first?.connections.first,
            connection.isVideoOrientationSupported {
             connection.videoOrientation = UIDevice.current.orientation.videoOrientation ?? .portrait

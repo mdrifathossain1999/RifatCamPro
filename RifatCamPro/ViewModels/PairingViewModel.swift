@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 import Vision
 import AVFoundation
+import Network
 
 @Observable
 @MainActor
@@ -65,7 +66,6 @@ final class PairingViewModel {
     // MARK: - Private
 
     private var cancellables = Set<AnyCancellable>()
-    private var scanRequest: VNSequenceRequest?
 
     // MARK: - Init
 

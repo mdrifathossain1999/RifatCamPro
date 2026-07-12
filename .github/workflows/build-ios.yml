@@ -44,6 +44,13 @@ jobs:
           echo "=== TAIL ==="
           tail -20 build.log
 
+          echo "=== CHECK BUILD RESULT ==="
+          if ! tail -1 build.log | grep -q "BUILD SUCCEEDED"; then
+            echo "BUILD FAILED! Full log tail:"
+            tail -50 build.log
+            exit 1
+          fi
+
           echo "=== FINDING APP ==="
           find build/DerivedData -name "*.app" -type d 2>/dev/null || echo "No .app found"
 

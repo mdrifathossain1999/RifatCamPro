@@ -65,7 +65,6 @@ final class H264StreamingService {
         guard !isRunning else { return }
         
         let parameters = NWParameters.tcp
-        parameters.defaultProtocolStack.internetProtocol = .init(.ipv4)
         
         do {
             let listener = try NWListener(using: parameters, on: NWEndpoint.Port(rawValue: port)!)

@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 
 struct StreamingState: Sendable {
     var isStreaming: Bool = false

@@ -143,7 +143,7 @@ final class FocusManager {
         let supportedDurations = device.activeFormat.minExposureDuration...device.activeFormat.maxExposureDuration
         let clampedDuration = clampDuration(duration, to: supportedDurations)
 
-        if device.exposureModeSupported(.custom) {
+        if device.isExposureModeSupported(.custom) {
             device.setExposureModeCustom(duration: clampedDuration, iso: clampedISO, completionHandler: nil)
             currentExposureMode = .custom
         } else if device.isExposureModeSupported(.locked) {
@@ -161,7 +161,7 @@ final class FocusManager {
 
         let clampedISO = max(device.activeFormat.minISO, min(iso, device.activeFormat.maxISO))
 
-        if device.exposureModeSupported(.custom) {
+        if device.isExposureModeSupported(.custom) {
             device.setExposureModeCustom(
                 duration: device.exposureDuration,
                 iso: clampedISO,
@@ -216,7 +216,7 @@ final class FocusManager {
         try device.lockForConfiguration()
         defer { device.unlockForConfiguration() }
 
-        let maxGains = device.maxWhiteBalanceGains
+        let maxGains = AVCaptureDevice.WhiteBalanceGains(redGain: 4.0, greenGain: 4.0, blueGain: 4.0)
         let clampedGains = AVCaptureDevice.WhiteBalanceGains(
             redGain: min(max(gains.redGain, 1.0), maxGains.redGain),
             greenGain: min(max(gains.greenGain, 1.0), maxGains.greenGain),

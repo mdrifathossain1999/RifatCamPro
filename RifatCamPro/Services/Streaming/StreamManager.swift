@@ -123,7 +123,7 @@ final class StreamManager: ObservableObject {
     init() {}
     
     deinit {
-        stop()
+        stopStreaming()
     }
     
     // MARK: - Lifecycle

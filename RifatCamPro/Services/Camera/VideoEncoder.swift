@@ -21,7 +21,7 @@ final class VideoEncoder: ObservableObject {
     private var sessionCodec: StreamingCodec = .h264
 
     private let encoderQueue = DispatchQueue(label: "com.rifatcam.videoencoder", qos: .userInteractive)
-    private let callbackQueue = DispatchQueue(label: "com.rifatcam.videoencoder.callback")
+    fileprivate let callbackQueue = DispatchQueue(label: "com.rifatcam.videoencoder.callback")
 
     var onEncodedFrame: ((EncodedFrame) -> Void)?
 
@@ -49,13 +49,11 @@ final class VideoEncoder: ObservableObject {
         if codec == .hevc {
             encoderSpecification = [
                 kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder as String: true,
-                kVTVideoEncoderSpecification_RealTime as String: true,
                 kVTVideoEncoderSpecification_EncoderID as String: "com.apple.videotoolbox.videoencoder.hevc"
             ]
         } else {
             encoderSpecification = [
                 kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder as String: true,
-                kVTVideoEncoderSpecification_RealTime as String: true,
                 kVTVideoEncoderSpecification_EncoderID as String: "com.apple.videotoolbox.videoencoder.h264"
             ]
         }
@@ -87,7 +85,6 @@ final class VideoEncoder: ObservableObject {
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration, value: NSNumber(value: 2))
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ExpectedFrameRate, value: NSNumber(value: frameRate))
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AllowFrameReordering, value: kCFBooleanFalse)
-        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AllowLongTermTemporalReferenceFrames, value: kCFBooleanFalse)
 
         if adaptiveBitrateEnabled {
             let dataRateLimit = bitrate * 15 / 100

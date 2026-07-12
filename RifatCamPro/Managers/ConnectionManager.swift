@@ -122,7 +122,6 @@ final class ConnectionManager: ObservableObject {
         }
 
         let parameters = NWParameters.tcp
-        parameters.connectTimeout = connectionTimeout
 
         let conn = NWConnection(host: host, port: nwPort, using: parameters)
         connection = conn
@@ -139,7 +138,6 @@ final class ConnectionManager: ObservableObject {
         let port = server.port
 
         let parameters = NWParameters.tcp
-        parameters.connectTimeout = connectionTimeout
 
         let conn = NWConnection(to: server.endpoint, using: parameters)
         connection = conn
@@ -228,7 +226,7 @@ final class ConnectionManager: ObservableObject {
             let config = settingsManager.currentSettings.camera
             let targetResolution = config.resolution
             let targetFrameRate = config.frameRate
-            let targetBitrate = Int(Double(config.bitrate) * config.codec.bitrateMultiplier)
+            let targetBitrate = Int(Double(config.bitrate) * 1.0)
 
             do {
                 try await cameraService.configureSession(with: config)

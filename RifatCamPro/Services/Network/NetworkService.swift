@@ -20,7 +20,7 @@ struct NetworkServiceStats: Sendable {
 
 // MARK: - Connection State
 
-enum NetworkServiceState: Sendable {
+enum NetworkServiceState: Sendable, Equatable {
     case disconnected
     case listening
     case connecting
@@ -313,7 +313,7 @@ final class NetworkService: Sendable {
                     let sockAddrLen = socklen_t(MemoryLayout<sockaddr_in>.size)
                     let getErr = getnameinfo(
                         addrPtr,
-                        sockLen_t(sockAddrLen),
+                        socklen_t(sockAddrLen),
                         &hostname,
                         socklen_t(hostname.count),
                         nil,
@@ -354,7 +354,6 @@ final class NetworkService: Sendable {
         }
 
         params.allowLocalEndpointReuse = true
-        params.explicitPeerIdentity = true
 
         do {
             guard let nwPort = NWEndpoint.Port(rawValue: port) else {

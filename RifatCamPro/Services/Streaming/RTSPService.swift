@@ -84,7 +84,6 @@ final class RTSPService {
         guard !isRunning else { return }
         
         let params = NWParameters.tcp
-        params.defaultProtocolStack.internetProtocol = .init(.ipv4)
         
         do {
             let listener = try NWListener(using: params, on: NWEndpoint.Port(rawValue: port)!)
@@ -269,7 +268,7 @@ final class RTSPService {
         var seq = session.sequenceNumber.bigEndian
         header.append(Data(bytes: &seq, count: 2))
         
-        let ts = (timestamp ?? session.timestamp).bigEndian
+        var ts = (timestamp ?? session.timestamp).bigEndian
         header.append(Data(bytes: &ts, count: 4))
         
         var ssrc = session.ssrc.bigEndian

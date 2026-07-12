@@ -65,7 +65,7 @@ enum StreamingProtocol: String, Codable, CaseIterable, Sendable {
     }
 }
 
-struct NetworkStats: Sendable {
+struct NetworkStats: Codable, Sendable {
     var localIP: String = "Detecting..."
     var port: UInt16 = 4747
     var bitrate: Double = 0

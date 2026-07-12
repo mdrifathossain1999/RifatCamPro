@@ -194,7 +194,7 @@ final class BonjourService: ObservableObject {
                 handleDeviceRemoved(result)
             case .identical:
                 break
-            case .update(let result):
+            case .changed(let result):
                 handleDeviceUpdated(result)
             @unknown default:
                 break

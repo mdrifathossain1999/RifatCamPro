@@ -3,6 +3,7 @@ import Network
 import AVFoundation
 import Combine
 import Observation
+import CoreImage
 
 enum MJPEGStreamingError: LocalizedError {
     case serverNotRunning
@@ -69,7 +70,6 @@ final class MJPEGStreamingService {
         
         do {
             let parameters = NWParameters.tcp
-            parameters.defaultProtocolStack.internetProtocol = .init(.ipv4)
             
             let listener = try NWListener(using: parameters, on: NWEndpoint.Port(rawValue: port)!)
             

@@ -342,7 +342,7 @@ struct SettingsView: View {
                         }
                     }
             }
-            .listRowBorderColor(!viewModel.isPortValid ? .red : .clear)
+            .listRowBackground(!viewModel.isPortValid ? Color.red.opacity(0.1) : Color.clear)
 
             if !viewModel.isPortValid && !viewModel.validationMessage.isEmpty {
                 Text(viewModel.validationMessage)
