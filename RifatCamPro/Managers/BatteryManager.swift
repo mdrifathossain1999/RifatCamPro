@@ -1,18 +1,17 @@
-import Foundation
+﻿import Foundation
 import Combine
 import Observation
 import UIKit
 
-@Observable
-final class BatteryManager {
+final class BatteryManager: ObservableObject {
 
     // MARK: - Published State
 
-    private(set) var batteryLevel: Float = 1.0
+    @Published private(set) var batteryLevel: Float = 1.0
     private(set) var batteryState: BatteryMonitorState = .unknown
     private(set) var isCharging = false
     private(set) var isPluggedIn = false
-    private(set) var thermalState: ThermalState = .nominal
+    @Published private(set) var thermalState: ThermalState = .nominal
     private(set) var isLowPowerMode = false
     private(set) var batteryWarning: BatteryWarning?
     private(set) var thermalWarning: ThermalWarning?
@@ -576,7 +575,7 @@ struct QualityRecommendation: Sendable {
         if reason.isEmpty {
             return "Quality: \(quality.displayName)"
         }
-        return "\(quality.displayName) — \(reason)"
+        return "\(quality.displayName) â€” \(reason)"
     }
 }
 

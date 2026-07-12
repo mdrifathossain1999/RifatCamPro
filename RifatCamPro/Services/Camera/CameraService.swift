@@ -2,8 +2,7 @@ import AVFoundation
 import Combine
 import SwiftUI
 
-@Observable
-final class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
+final class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
     private var captureSession: AVCaptureSession?
     private var videoDevice: AVCaptureDevice?
     private var videoInput: AVCaptureDeviceInput?
@@ -16,12 +15,12 @@ final class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
 
     var previewSession: AVCaptureSession? { captureSession }
     var currentConfiguration = CameraConfiguration()
-    var isSessionRunning = false
-    var cameraPermissionGranted = false
-    var audioPermissionGranted = false
-    var availableCameras: [CameraInfo] = []
-    var thermalState: ThermalState = .nominal
-    var currentFPS: Double = 0
+    @Published var isSessionRunning = false
+    @Published var cameraPermissionGranted = false
+    @Published var audioPermissionGranted = false
+    @Published var availableCameras: [CameraInfo] = []
+    @Published var thermalState: ThermalState = .nominal
+    @Published var currentFPS: Double = 0
 
     let videoSampleBuffer = PassthroughSubject<CMSampleBuffer, Never>()
     let audioSampleBuffer = PassthroughSubject<CMSampleBuffer, Never>()
@@ -721,7 +720,7 @@ final class CameraService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
         didDrop sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
-        // Frame dropped due to late arrival — no action needed
+        // Frame dropped due to late arrival â€” no action needed
     }
 
     // MARK: - Thermal State

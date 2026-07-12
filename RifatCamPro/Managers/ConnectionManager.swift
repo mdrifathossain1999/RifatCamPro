@@ -2,14 +2,14 @@ import Foundation
 import Network
 import Combine
 import Observation
+import UIKit
 
-@Observable
-final class ConnectionManager {
+final class ConnectionManager: ObservableObject {
 
     // MARK: - Published State
 
-    private(set) var state: ConnectionState = .disconnected
-    private(set) var connectionStatus: ConnectionStatus = .disconnected
+    @Published private(set) var state: ConnectionState = .disconnected
+    @Published private(set) var connectionStatus: ConnectionStatus = .disconnected
     private(set) var networkStats = NetworkStats()
     private(set) var discoveredServers: [DiscoveredServer] = []
     private(set) var isInBackground = false

@@ -3,10 +3,9 @@ import VideoToolbox
 import CoreMedia
 import Combine
 
-@Observable
-final class VideoEncoder {
-    var isEncoding = false
-    var currentBitrate: Int = 4_000_000
+final class VideoEncoder: ObservableObject {
+    @Published var isEncoding = false
+    @Published var currentBitrate: Int = 4_000_000
     var adaptiveBitrateEnabled = true
 
     private var compressionSession: VTCompressionSession?

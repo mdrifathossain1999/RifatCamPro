@@ -1,8 +1,9 @@
-import Foundation
+﻿import Foundation
 import AVFoundation
 import Combine
 import Network
 import Observation
+import UIKit
 
 enum StreamManagerState: Equatable, Sendable {
     case idle
@@ -82,13 +83,16 @@ struct StreamingStatistics: Sendable {
     }
 }
 
-@Observable
-final class StreamManager {
+final class StreamManager: ObservableObject {
     private(set) var state: StreamManagerState = .idle
     private(set) var statistics = StreamingStatistics()
     private(set) var activeProtocol: StreamingProtocol = .mjpeg
     private(set) var connectedClientCount: Int = 0
     private(set) var lastError: StreamManagerError?
+    
+    @Published var streamingState = StreamingState()
+    let errorSubject = PassthroughSubject<AppError, Never>()
+    @Published var streamEvents: [StreamEvent] = []
     
     let mjpegService = MJPEGStreamingService()
     let h264Service = H264StreamingService()
@@ -131,6 +135,7 @@ final class StreamManager {
         
         state = .preparing
         activeProtocol = streamingProtocol
+        updateStreamingState()
         
         do {
             switch streamingProtocol {
@@ -158,9 +163,11 @@ final class StreamManager {
             
             state = .streaming
             statsStartTime = Date()
+            updateStreamingState()
             
         } catch {
             state = .error(error.localizedDescription)
+            updateStreamingState()
             throw error
         }
     }
@@ -183,6 +190,7 @@ final class StreamManager {
         
         state = .idle
         connectedClientCount = 0
+        updateStreamingState()
         statistics = StreamingStatistics()
         h264SPS = nil
         h264PPS = nil
@@ -192,11 +200,13 @@ final class StreamManager {
     func pause() {
         guard state == .streaming else { return }
         state = .paused
+        updateStreamingState()
     }
     
     func resume() {
         guard state == .paused else { return }
         state = .streaming
+        updateStreamingState()
     }
     
     func switchProtocol(to newProtocol: StreamingProtocol, port: UInt16) throws {
@@ -481,5 +491,17 @@ final class StreamManager {
     
     func requestKeyframe() {
         // Signal encoder to produce a keyframe on next opportunity
+    }
+
+    private func updateStreamingState() {
+        var s = StreamingState()
+        s.isStreaming = (state == .streaming || state == .paused)
+        s.codec = activeProtocol == .hevc ? .hevc : .h264
+        s.frameRate = targetFrameRate
+        s.bitrate = Int(statistics.currentBitrate)
+        s.framesEncoded = statistics.framesSent
+        s.framesDropped = statistics.framesDropped
+        s.startTime = statsStartTime
+        streamingState = s
     }
 }

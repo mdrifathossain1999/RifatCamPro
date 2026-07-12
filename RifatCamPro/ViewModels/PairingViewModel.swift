@@ -206,27 +206,19 @@ final class PairingViewModel {
         connectionProgressMessage = "Connecting to \(host):\(port)..."
         connectionStatus = .connecting
 
-        do {
-            var config = settingsManager.currentSettings.network
-            config.port = port
-            if !password.isEmpty {
-                config.password = password
-                config.enablePasswordProtection = true
-            }
-            settingsManager.networkConfiguration = config
-
-            try await connectionManager.connect(host: host, port: port, password: password.isEmpty ? nil : password)
-
-            isConnecting = false
-            connectionStatus = .connected(address: "\(host):\(port)")
-            pairingSuccess = true
-        } catch {
-            isConnecting = false
-            connectionStatus = .error(error.localizedDescription)
-            showError(.connectionTimeout)
+        var config = settingsManager.currentSettings.network
+        config.port = port
+        if !password.isEmpty {
+            config.password = password
+            config.enablePasswordProtection = true
         }
-    }
+        settingsManager.networkConfiguration = config
 
+        let target = ConnectionTarget.manual(address: host, port: port)
+        connectionManager.connect(to: target)
+
+        // Connection result is observed via bindConnectionManager()
+    }
     func connectToDevice(_ device: DiscoveredDevice) async {
         selectedDevice = device
 
@@ -439,11 +431,11 @@ final class PairingViewModel {
             }
             .store(in: &cancellables)
 
-        connectionManager.errorSubject
+        connectionManager.errorOccurred
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
                 self?.isConnecting = false
-                self?.showError(error)
+                self?.showError(.networkError(error.message))
             }
             .store(in: &cancellables)
     }

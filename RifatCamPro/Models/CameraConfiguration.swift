@@ -12,7 +12,7 @@ struct CameraConfiguration: Codable, Sendable {
     var manualFocusLensPosition: Float = 0.5
     var zoomFactor: CGFloat = 1.0
     var exposureISO: Float = 100
-    var exposureDuration: CMTime = CMTime(value: 1, timescale: 30)
+    var exposureDuration: Double = 1.0/30.0
     var whiteBalanceTemperature: CGFloat = 5600
     var mirrorFrontCamera: Bool = true
     var mirrorBackCamera: Bool = false

@@ -72,14 +72,13 @@ struct DiscoveredDevice: Identifiable, Hashable, Sendable {
 
 // MARK: - BonjourService
 
-@Observable
-final class BonjourService: Sendable {
+final class BonjourService: ObservableObject {
 
     // MARK: - Published State
 
-    private(set) var devices: [DiscoveredDevice] = []
-    private(set) var isBrowsing: Bool = false
-    private(set) var lastError: Error?
+    @Published private(set) var devices: [DiscoveredDevice] = []
+    @Published private(set) var isBrowsing: Bool = false
+    @Published private(set) var lastError: Error?
 
     // MARK: - Combine Subjects
 

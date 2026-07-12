@@ -442,10 +442,10 @@ final class StreamingViewModel {
             }
             .store(in: &cancellables)
 
-        connectionManager.errorSubject
+        connectionManager.errorOccurred
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
-                self?.showError(error)
+                self?.showError(.networkError(error.message))
             }
             .store(in: &cancellables)
     }
