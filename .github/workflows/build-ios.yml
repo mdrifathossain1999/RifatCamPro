@@ -9,7 +9,7 @@ jobs:
   build:
     name: Build iOS App
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -21,51 +21,61 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
-      - name: Verify Project
+      - name: Show Schemes
         run: |
           ls -la RifatCamPro.xcodeproj/
-          echo "Project generated successfully"
+          xcodebuild -project RifatCamPro.xcodeproj -list
 
-      - name: Build Without Signing
+      - name: Build App
         run: |
+          set -e
           xcodebuild -project RifatCamPro.xcodeproj \
             -scheme RifatCamPro \
             -configuration Release \
+            -derivedDataPath build/DerivedData \
             -destination "generic/platform=iOS" \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" \
             ENABLE_BITCODE=NO \
-            build 2>&1 | tail -50
+            clean build 2>&1 | tee build.log
 
-      - name: Package IPA
+          echo "=== TAIL ==="
+          tail -20 build.log
+
+          echo "=== FINDING APP ==="
+          find build/DerivedData -name "*.app" -type d 2>/dev/null || echo "No .app found"
+
+      - name: Create IPA
         run: |
-          BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "RifatCamPro.app" -path "*/Release-iphoneos/*" 2>/dev/null | head -1)
+          set -e
           
-          if [ -z "$BUILD_DIR" ]; then
-            BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "RifatCamPro.app" 2>/dev/null | head -1)
-          fi
+          APP_PATH=$(find build/DerivedData -name "RifatCamPro.app" -type d | head -1)
           
-          mkdir -p ipa_output/Payload
-          
-          if [ -n "$BUILD_DIR" ]; then
-            echo "Found: $BUILD_DIR"
-            cp -R "$BUILD_DIR" ipa_output/Payload/
-          else
-            echo "No .app found, build may have failed"
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: .app bundle not found!"
+            find build/ -type f -name "*.app" 2>/dev/null
             exit 1
           fi
           
-          cd ipa_output
-          zip -r ../RifatCamPro.ipa Payload/
+          echo "Found app: $APP_PATH"
+          ls -la "$APP_PATH/"
+          
+          mkdir -p Staging/Payload
+          cp -R "$APP_PATH" Staging/Payload/RifatCamPro.app
+          
+          cd Staging
+          zip -r -y ../RifatCamPro.ipa Payload/
           cd ..
-          mv RifatCamPro.ipa ipa_output/
+          
+          ls -la RifatCamPro.ipa
+          unzip -l RifatCamPro.ipa | head -20
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: RifatCamPro-build-${{ github.run_number }}
-          path: ipa_output/RifatCamPro.ipa
+          name: RifatCamPro-v1.0-${{ github.run_number }}
+          path: RifatCamPro.ipa
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
