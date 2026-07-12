@@ -205,7 +205,9 @@ final class BonjourService: ObservableObject {
     private func handleDeviceAdded(_ result: NWBrowser.Result) {
         let endpoint = result.endpoint
         var metadata: Data? = nil
-        if let record = result.metadata { metadata = record.rawRepresentation }
+        if case .bonjour(let txtRecord) = result.metadata {
+            metadata = try? JSONSerialization.data(withJSONObject: txtRecord.dictionary)
+        }
         let device = DiscoveredDevice(endpoint: endpoint, metadata: metadata)
 
         lock.lock()
@@ -241,7 +243,9 @@ final class BonjourService: ObservableObject {
     private func handleDeviceUpdated(_ result: NWBrowser.Result) {
         let endpoint = result.endpoint
         var metadata: Data? = nil
-        if let record = result.metadata { metadata = record.rawRepresentation }
+        if case .bonjour(let txtRecord) = result.metadata {
+            metadata = try? JSONSerialization.data(withJSONObject: txtRecord.dictionary)
+        }
         let device = DiscoveredDevice(endpoint: endpoint, metadata: metadata)
 
         lock.lock()
